@@ -29,14 +29,14 @@ public class ForSunHttpClient implements ApiCallTraceHelper.IHelper {
 
 	static {
 
-		try {
-			sunHttpClass = sun.net.www.http.HttpClient.class;
-			url = sunHttpClass.getDeclaredField("url");
-			url.setAccessible(true);
-		} catch (Throwable e) {
-			url = null;
-			sunHttpClass = null;
-		}
+//		try {
+//			sunHttpClass = sun.net.www.http.HttpClient.class;
+//			url = sunHttpClass.getDeclaredField("url");
+//			url.setAccessible(true);
+//		} catch (Throwable e) {
+//			url = null;
+//			sunHttpClass = null;
+//		}
 
 	}
 
@@ -46,16 +46,7 @@ public class ForSunHttpClient implements ApiCallTraceHelper.IHelper {
 
 		ApiCallStep step = new ApiCallStep();
 
-		try {
-			if (ok && (hookPoint.this1 instanceof sun.net.www.http.HttpClient)) {
-				URL u = (URL) url.get(hookPoint.this1);
-				if (u != null) {
-					ctx.apicall_name = u.getPath();
-				}
-			}
-		} catch (Exception e) {
-			ok = false;
-		}
+
 		if (ctx.apicall_name == null)
 			ctx.apicall_name = hookPoint.class1;
 		return step;

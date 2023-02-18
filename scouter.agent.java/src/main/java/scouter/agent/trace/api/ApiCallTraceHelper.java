@@ -47,8 +47,8 @@ public class ApiCallTraceHelper {
 	}
 
 	static {
-		put("sun/net/www/protocol/http/HttpURLConnection", new ForHttpURLConnection());
-		put("sun/net/www/http/HttpClient", new ForSunHttpClient());
+//		put("sun/net/www/protocol/http/HttpURLConnection", new ForHttpURLConnection());
+//		put("sun/net/www/http/HttpClient", new ForSunHttpClient());
 		put("org/apache/commons/httpclient/HttpClient", new ForHttpClient());
 		put("org/apache/http/impl/client/InternalHttpClient", forHttpClient43);
 		put("org/apache/http/impl/client/AbstractHttpClient", new ForHttpClient40());

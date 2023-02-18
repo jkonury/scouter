@@ -25,6 +25,7 @@ import java.util.Enumeration;
 public class HttpTraceFactory {
 	private static final String HTTP_TRACE = "scouter.xtra.http.HttpTrace";
 	private static final String HTTP_TRACE3 = "scouter.xtra.http.HttpTrace3";
+	private static final String JAKARTA_HTTP_TRACE3 = "scouter.xtra.http.HttpTraceJakarta3";
 	private static final String HTTP_TRACE_WEBFLUX = "scouter.xtra.http.WebfluxHttpTrace";
 
 	public static final IHttpTrace dummy = new IHttpTrace() {
@@ -98,6 +99,7 @@ public class HttpTraceFactory {
 			Class c = null;
 
 			boolean reactive = true;
+			boolean jakarta = false;
 			try {
 				Method m = oReq.getClass().getMethod("mutate");
 				c = Class.forName(HTTP_TRACE_WEBFLUX, true, loader);
@@ -106,7 +108,20 @@ public class HttpTraceFactory {
 				reactive = false;
 			}
 
-			if (!reactive) {
+			try {
+				for (Method method : oReq.getClass().getMethods()) {
+					if (method.toString().contains("jakarta")) {
+						jakarta = true;
+						break;
+					}
+				}
+			} catch (Exception e) {
+				Logger.println("A134", "fail to create jakarta", e);
+			}
+
+			if (jakarta) {
+				c = Class.forName(JAKARTA_HTTP_TRACE3, true, loader);
+			} else if (!reactive) {
 				boolean servlet3 = true;
 				try {
 					Method m = oReq.getClass().getMethod("logout");

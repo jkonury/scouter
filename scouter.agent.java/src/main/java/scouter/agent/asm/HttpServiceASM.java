@@ -28,12 +28,15 @@ public class HttpServiceASM implements IASM, Opcodes {
 	public HashSet<String> servlets = new HashSet<String>();
 	public HttpServiceASM() {
 		servlets.add("javax/servlet/http/HttpServlet");
-		servlets.add("weblogic/servlet/jsp/JspBase");	
+		servlets.add("weblogic/servlet/jsp/JspBase");
 	}
 
 	public ClassVisitor transform(ClassVisitor cv, String className, ClassDesc classDesc) {
 		if (Configure.getInstance()._hook_serivce_enabled == false) {
 			return cv;
+		}
+		if ("jakarta/servlet/http/HttpServlet".contains(className)) {
+			return new JakartaHttpServiceCV(cv, className);
 		}
 		if (servlets.contains(className)) {
 			return new HttpServiceCV(cv, className);
@@ -41,6 +44,8 @@ public class HttpServiceASM implements IASM, Opcodes {
 		for (int i = 0; classDesc.interfaces != null && i < classDesc.interfaces.length; i++) {
 			if ("javax/servlet/Filter".equals(classDesc.interfaces[i])) {
 				return new HttpServiceCV(cv, className);
+			} else if ("jakarta/servlet/Filter".equals(classDesc.interfaces[i])) {
+				return new JakartaHttpServiceCV(cv, className);
 			}
 		}
 		return cv;
@@ -67,6 +72,33 @@ class HttpServiceCV extends ClassVisitor implements Opcodes {
 				return new HttpServiceMV(access, desc, mv, true);
 			} else if (TARGET_DOFILTER.equals(name)) {
 				Logger.println("A104", "FILTER " + className);
+				return new HttpServiceMV(access, desc, mv, false);
+			}
+		}
+		return mv;
+	}
+}
+class JakartaHttpServiceCV extends ClassVisitor implements Opcodes {
+	private static String TARGET_SERVICE = "service";
+	private static String TARGET_DOFILTER = "doFilter";
+	private static String TARGET_SIGNATURE = "(Ljakarta/servlet/ServletRequest;Ljakarta/servlet/ServletResponse;";
+	private String className;
+	public JakartaHttpServiceCV(ClassVisitor cv, String className) {
+		super(ASM9, cv);
+		this.className = className;
+	}
+	@Override
+	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+		if (mv == null) {
+			return mv;
+		}
+		if (desc.startsWith(TARGET_SIGNATURE)) {
+			if (TARGET_SERVICE.equals(name)) {
+				Logger.println("A103", "Jakarta HTTP " + className);
+				return new HttpServiceMV(access, desc, mv, true);
+			} else if (TARGET_DOFILTER.equals(name)) {
+				Logger.println("A104", "Jakarta FILTER " + className);
 				return new HttpServiceMV(access, desc, mv, false);
 			}
 		}

@@ -37,55 +37,43 @@ public class ForHttpURLConnection implements ApiCallTraceHelper.IHelper {
 	static Field inputStream = null;
 
 	static {
-		try {
-			if (JavaAgent.isJava9plus()) {
-				ModuleUtil.grantAccess(JavaAgent.getInstrumentation(),
-                    ForHttpURLConnection.class.getName(),
-					"sun.net.www.protocol.http.HttpURLConnection");
-			}
-			httpclass = sun.net.www.protocol.http.HttpURLConnection.class;
-			inputStream = httpclass.getDeclaredField("inputStream");
-			inputStream.setAccessible(true);
-		} catch (Throwable e) {
-			inputStream = null;
-			httpclass = null;
-		}
+
 	}
 
 	public ApiCallStep process(TraceContext ctx, HookArgs hookPoint) {
 
 		ApiCallStep step = new ApiCallStep();
 
-		try {
-			if (hookPoint.this1 instanceof sun.net.www.protocol.http.HttpURLConnection) {
-				if (inputStream.get(hookPoint.this1) != null) {
-					// Null  추적이 종료된다.
-					return null;
-				}
-			}
-			HttpURLConnection urlCon = ((HttpURLConnection) hookPoint.this1);
-			if ("connect".equals(hookPoint.method)) {
-				step.txid = KeyGen.next();
-				transfer(ctx, urlCon, step.txid);
-				ctx.callee = step.txid;
-				return null; // apicall을 무시함...
-			} else {
-				if (ctx.callee == 0) { // connect가 호출되지 않음
-					step.txid = KeyGen.next();
-					transfer(ctx, urlCon, step.txid);
-				} else {
-					step.txid = ctx.callee;
-					ctx.callee = 0;
-				}
-				URL url = urlCon.getURL();
-				ctx.apicall_name = url.getPath();
-
-				step.opt = 1;
-				step.address = url.getHost() + ":" + url.getPort();
-
-			}
-		} catch (Exception e) {
-		}
+//		try {
+//			if (hookPoint.this1 instanceof sun.net.www.protocol.http.HttpURLConnection) {
+//				if (inputStream.get(hookPoint.this1) != null) {
+//					// Null  추적이 종료된다.
+//					return null;
+//				}
+//			}
+//			HttpURLConnection urlCon = ((HttpURLConnection) hookPoint.this1);
+//			if ("connect".equals(hookPoint.method)) {
+//				step.txid = KeyGen.next();
+//				transfer(ctx, urlCon, step.txid);
+//				ctx.callee = step.txid;
+//				return null; // apicall을 무시함...
+//			} else {
+//				if (ctx.callee == 0) { // connect가 호출되지 않음
+//					step.txid = KeyGen.next();
+//					transfer(ctx, urlCon, step.txid);
+//				} else {
+//					step.txid = ctx.callee;
+//					ctx.callee = 0;
+//				}
+//				URL url = urlCon.getURL();
+//				ctx.apicall_name = url.getPath();
+//
+//				step.opt = 1;
+//				step.address = url.getHost() + ":" + url.getPort();
+//
+//			}
+//		} catch (Exception e) {
+//		}
 
 		if (ctx.apicall_name == null)
 			ctx.apicall_name = hookPoint.class1;
