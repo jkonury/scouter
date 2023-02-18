@@ -16,11 +16,10 @@
  */
 package scouter.agent.proxy;
 
-import scouter.agent.Logger;
-import scouter.agent.trace.TraceContext;
-
 import java.lang.reflect.Method;
 import java.util.Enumeration;
+import scouter.agent.Logger;
+import scouter.agent.trace.TraceContext;
 
 public class HttpTraceFactory {
 	private static final String HTTP_TRACE = "scouter.xtra.http.HttpTrace";
@@ -109,12 +108,13 @@ public class HttpTraceFactory {
 			}
 
 			try {
-				for (Method method : oReq.getClass().getMethods()) {
-					if (method.toString().contains("jakarta")) {
+				for (Class<?> interfaceClass : oReq.getClass().getInterfaces()) {
+					if (interfaceClass.getPackage().getName().startsWith("jakarta")) {
 						jakarta = true;
 						break;
 					}
 				}
+
 			} catch (Exception e) {
 				Logger.println("A134", "fail to create jakarta", e);
 			}

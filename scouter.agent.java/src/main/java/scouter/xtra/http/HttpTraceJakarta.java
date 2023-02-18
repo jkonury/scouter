@@ -21,14 +21,12 @@ import static scouter.agent.AgentCommonConstant.ASYNC_SERVLET_DISPATCHED_PREFIX;
 import static scouter.agent.AgentCommonConstant.REQUEST_ATTRIBUTE_CALLER_TRANSFER_MAP;
 import static scouter.agent.AgentCommonConstant.REQUEST_ATTRIBUTE_SELF_DISPATCHED;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Enumeration;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Enumeration;
 import scouter.agent.Configure;
 import scouter.agent.Logger;
 import scouter.agent.counter.meter.MeterUsers;
@@ -257,16 +255,16 @@ public class HttpTraceJakarta implements IHttpTrace {
         try {
             switch (conf.trace_user_mode) {
                 case 3:
-                    ctx.userid = getUseridFromHeader(request, conf.trace_user_session_key);
+                    ctx.userid = JakartaUseridUtil.getUseridFromHeader(request, conf.trace_user_session_key);
                     if (ctx.userid == 0 && ctx.remoteIp != null) {
                         ctx.userid = HashUtil.hash(ctx.remoteIp);
                     }
                     break;
                 case 2:
-//                    ctx.userid = getUserid(request, response, conf.trace_user_cookie_path, conf.trace_scouter_cookie_max_age);
+                    ctx.userid = JakartaUseridUtil.getUserid(request, response, conf.trace_user_cookie_path, conf.trace_scouter_cookie_max_age);
                     break;
                 case 1:
-//                    ctx.userid = getUseridCustom(request, conf.trace_user_session_key);
+                    ctx.userid = JakartaUseridUtil.getUseridCustom(request, conf.trace_user_session_key);
                     if (ctx.userid == 0 && ctx.remoteIp != null) {
                         ctx.userid = HashUtil.hash(ctx.remoteIp);
                     }
@@ -569,61 +567,5 @@ public class HttpTraceJakarta implements IHttpTrace {
 
     public boolean isSelfDispatch(Object oAsyncContext) {
         return false;
-    }
-
-
-
-    public static long getUseridCustom(ServerHttpRequest req, ServerHttpResponse res, String key) {
-        if (key == null || key.length() == 0)
-            return 0;
-        try {
-            String cookie = req.getHeaders().getFirst("Cookie");
-            if (cookie != null) {
-                int x1 = cookie.indexOf(key);
-                if (x1 >= 0) {
-                    String value = null;
-                    int x2 = cookie.indexOf(';', x1);
-                    if (x2 > 0) {
-                        value = cookie.substring(x1 + key.length() + 1, x2);
-                    } else {
-                        value = cookie.substring(x1 + key.length() + 1);
-                    }
-                    if (value != null) {
-                        return HashUtil.hash(value);
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            Logger.println("A154", t.toString());
-        }
-        return 0;
-    }
-
-    public static long getUseridFromHeader(HttpServletRequest req, String key) {
-        if (key == null || key.length() == 0)
-            return 0;
-        try {
-            String headerValue = req.getHeader(key);
-            if (headerValue != null) {
-                return HashUtil.hash(headerValue);
-            }
-        } catch (Throwable t) {
-            Logger.println("A155", t.toString());
-        }
-        return 0;
-    }
-
-    public static long getUseridFromHeader(ServerHttpRequest req, ServerHttpResponse res, String key) {
-        if (key == null || key.length() == 0)
-            return 0;
-        try {
-            String headerValue = req.getHeaders().getFirst(key);
-            if (headerValue != null) {
-                return HashUtil.hash(headerValue);
-            }
-        } catch (Throwable t) {
-            Logger.println("A155", t.toString());
-        }
-        return 0;
     }
 }
