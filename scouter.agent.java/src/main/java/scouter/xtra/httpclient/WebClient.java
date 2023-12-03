@@ -47,7 +47,7 @@ public class WebClient implements IHttpClient {
 	public int getResponseStatusCode(Object o) {
 		if (o instanceof ClientHttpResponse) {
 			ClientHttpResponse res = (ClientHttpResponse) o;
-			return res.getRawStatusCode();
+			return res.getStatusCode().value();
 		}
 		return 0;
 	}
